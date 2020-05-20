@@ -1,6 +1,14 @@
 # Changelog
 
-## [Unreleased]
+## [0.2.1]
+
+### Changed
+- updated getting_started.Rmd for the debugging section from przell (#10 on develop in version 0.3)
+
+### Fixed
+- NA, NaN and NULL are mapped to null in JSON instead of NA returned as text "NA".
+
+## [0.2.0]
 
 ### Added
 - readded the `/examples/data` folder after it was temporarily removed
