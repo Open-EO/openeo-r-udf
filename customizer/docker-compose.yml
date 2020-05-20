@@ -2,7 +2,7 @@ version: '3'
 services:
     r-udf-child-service:
         build: .
-        image: openeor/r-udf-base:0.1-dev
+        image: openeor/r-udf-base:0.3.0
         container_name: r-udf-custom
         environment:
             - PLUMBER_PORT=5555
