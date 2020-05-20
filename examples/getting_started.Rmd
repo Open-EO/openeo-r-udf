@@ -123,6 +123,20 @@ In the future creating test data might be supported by the openEO back-ends or c
 ### Prerequisite
 You need to have a running UDF service instance. Either via RStudio and its integrated plumber API support. Or you can run the service by creating a container from the Docker image.
 You have cloned the repository or downloaded the JSON files and this file in `/examples`.
+To run the UDF service instance locally start a rstudio session and do this
+```
+library(plumber)
+r_udf = plumb(api.R)
+r_udf$run(port=5555)
+```
+To connect to the api open a second instance of rstudio and get for example the installed packages.
+```
+library(httr)
+library(jsonlite)
+pkg = GET("http://127.0.0.1:5555/packages")
+pkg = fromJSON(content(pkg, "text")
+```
+
 
 ### Example Data
 The example data (`/examples/data/hypercube.json`) is a Sentinel-2 L1C subset for 3 timesteps, 13 bands and 300 x 300 pixel spatial resolution. The single bands are upscaled to the highest available resolution applying nearest neighbor interpolation. This scene is provided as plain text JSON files as `RasterCollectionTile` and `Hypercube`. The current data models can be viewed [here (Version 0.1pre-alpha)](https://open-eo.github.io/openeo-udf/api_docs/).
@@ -164,3 +178,32 @@ The result of the run_udf is a JSON string that can be translated into an R obje
 ### Additional examples / data
 
 Under the folder `/examples` of this repository there are different folders containing JSON objects for example data, some R scripts operating on different data, as well as the payloads of combined data and code fragments for processing.
+
+### Debugging 
+You need a locally running UDF service instance started via plumber in rstudio. And a second rstudio session which is used to send requests to the locally running UDF service. This is described in [Prerequisits](#prerequisite). Furthermore, add `browser()` to the your R UDF script.
+
+```{r, eval=FALSE}
+script = quote({
+  browser()
+  all_dim = names(dim(data))
+  ndvi_result = st_apply(data, FUN = function(X,...) {
+    (X[8]-X[4])/(X[8]+X[4])
+  }, MARGIN = all_dim[-which(all_dim=="band")])
+  
+  all_dim = names(dim(ndvi_result))
+  min_ndvi = st_apply(ndvi_result,FUN = min, MARGIN = all_dim[-which(all_dim=="t")])
+
+  min_ndvi
+})
+```
+Then use `send_udf()` as described above. Make sure that `browser()` is included in the file you pass to the argument `code = `.
+```{r, eval=FALSE}
+send_udf(data = "examples/data/hypercube.json",code = script,host=host,port=port)
+```
+You will now be in the debug-mode of your locally running UDF service instance. And can evaluate interactively through your R UDF code.
+**Note for backend developers hosting a R UDF service:**
+This debug method is the only way to see what is happening inside the R session of the docker container used for your R UDF service. If the R UDF service you are hosting returns a 500 error you will most likely use this debug method. 
+If you are concerned about how the data transfer from the openEO backend into the R UDF service works (i.e. the conversion of the hypercube.json written by the backend into the stars object used by the R UDF servie) you can `httr::POST()` the hypbercube.json containing data and code. An example of this hypercube.json file is in this repo `examples/request/minimal_example_with_code.json`. Make sure to add `browse()` into the code section of this request. Then you can debug like this.
+```{r, eval=FALSE}
+httr::POST(url = "http://127.0.0.1:5555/udf", body = "examples/request/minimal_example_with_code.json")
+```
