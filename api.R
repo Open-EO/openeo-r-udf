@@ -198,7 +198,7 @@ post_udf_legacy.json = function(req,res, debug=FALSE) {
   }
   
   # Create the JSON structure
-  json = .measure_time(quote(jsonlite::toJSON(json_out,auto_unbox = TRUE)),"Prepared JSON from list. Runtime:")
+  json = .measure_time(quote(jsonlite::toJSON(json_out,auto_unbox = TRUE, na = "null", null = "null")),"Prepared JSON from list. Runtime:")
   
   res$setHeader(name = "CONTENT-TYPE",value = "application/json")
   res$setHeader(name = "date", value = Sys.time())
@@ -285,6 +285,8 @@ post_udf.json = function(req,res, debug=FALSE) {
     json = .measure_time(quote(jsonlite::toJSON(json_out,
                                                 auto_unbox = TRUE,
                                                 force=TRUE,
+                                                na = "null",
+                                                null = "null",
                                                 digits = if (length(req$server_context$export_digits) == 0) 4 else req$server_context$export_digits)),
                          "Prepared JSON from list. Runtime:")
   }, error = function(e) {
