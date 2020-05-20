@@ -4,7 +4,7 @@ library(lubridate)
 library(xts)
 
 api_version = "0.1.0"
-r_udf_version = "0.3.0"
+r_udf_version = "0.3.1"
 
 DEBUG = FALSE
 

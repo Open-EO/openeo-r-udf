@@ -1,4 +1,4 @@
-FROM openeor/r-udf-base:0.1-dev
+FROM openeor/r-udf-base:0.3.1
 
 ENV PLUMBER_PORT=5555
 

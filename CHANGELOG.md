@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.3.1]
+
+### Fixed
+- NA, NULL and NaN values are now mapped to null in the JSON response. Before NA was stated as "NA" in the JSON which resulted in an array that contained a mixed data types of text and number.
+
 ## [0.3] UDF API version 0.1.0
 
 ### Added
