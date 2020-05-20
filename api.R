@@ -146,7 +146,7 @@ post_udf.json = function(req,res, debug=FALSE) {
   }
 
   # Create the JSON structure
-  json = .measure_time(quote(jsonlite::toJSON(json_out,auto_unbox = TRUE)),"Prepared JSON from list. Runtime:")
+  json = .measure_time(quote(jsonlite::toJSON(json_out,auto_unbox = TRUE, na = "null", null = "null")),"Prepared JSON from list. Runtime:")
 
   res$setHeader(name = "CONTENT-TYPE",value = "application/json")
   res$setHeader(name = "date", value = Sys.time())
