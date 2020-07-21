@@ -18,8 +18,8 @@
           "dim": ["t", "band", "x", "y"],
           "size": [10, 3, 10, 10],
           "variable_collection": 0,
-          "dimensions": [
-            {
+          "dimensions": {
+            "t":{
               "extent": ["2020-03-29 17:00:03", "2020-04-18 17:00:03"],
               "values": [],
               "number_of_cells": 10,
@@ -28,7 +28,7 @@
               "unit": "ISO8601",
               "reference_system": "gregorian"
             },
-            {
+            "band":{
               "extent": ["B01", "B03"],
               "values": ["B01", "B02", "B03"],
               "number_of_cells": 3,
@@ -37,7 +37,7 @@
               "unit": null,
               "reference_system": null
             },
-            {
+            "x":{
               "extent": [403500, 403600],
               "values": [],
               "number_of_cells": 10,
@@ -46,7 +46,7 @@
               "unit": "m",
               "reference_system": 25832
             },
-            {
+            "y":{
               "extent": [5760430, 5760530],
               "values": [],
               "number_of_cells": 10,
@@ -55,7 +55,7 @@
               "unit": "m",
               "reference_system": 25832
             }
-          ]
+          }
         }
       ]
     },
