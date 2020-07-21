@@ -223,7 +223,7 @@ extract_variables = function(variable_collection) {
 
 as.stars.DataCube = function(from) {
   apply_dimensionality(from$data_collection$object_collections$data_cubes,
-                       extract_variables(from$data_collection$variable_collections))
+                       extract_variables(from$data_collection$variables_collections))
 }
 
 setAs(from="DataCube",to="stars",def=as.stars.DataCube)
@@ -436,7 +436,7 @@ as.DataCube.stars = function(from) {
   result$object_collections = list()
   result$object_collections$data_cubes = data_cubes
   
-  result$variable_collections = list()
+  result$variables_collections = list()
   # create variables
   vars = lapply(1:length(from), function(index) {
     obj = from[[index]]
@@ -457,7 +457,7 @@ as.DataCube.stars = function(from) {
     return(vcoll)
   })
   
-  result$variable_collections = vars
+  result$variables_collections = vars
   result$metadata$number_of_variables = length(result$variable_collections)
   
   return(result)

@@ -54,7 +54,7 @@
         }
       ]
     },
-    "variable_collections": [
+    "variables_collections": [
       {
         "name": "cube_data",
         "size": [10, 3, 10, 10],
