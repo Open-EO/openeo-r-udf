@@ -125,6 +125,7 @@ apply_dimensionality = function(dc,vc) {
     
     
     dims = dim_collection$dimensions #data.frame
+    dim_names = names(dims)
     
     spatial_refsys = NA
     #foreach dimension do:
@@ -399,7 +400,7 @@ as.DataCube.stars = function(from) {
                       if (!is.na(d$refsys) && d$refsys == "POSIXct") {
                         "ISO8601"
                       } else {
-                        NA
+                        ""
                       }
                     })
       
@@ -416,6 +417,7 @@ as.DataCube.stars = function(from) {
       
       
       dim = list(
+        description = "",
         extent=ex,
         values = vals,
         number_of_cells = nums,
@@ -429,6 +431,7 @@ as.DataCube.stars = function(from) {
     })
     
     dc$dimensions = dim_models
+    names(dc$dimensions) = dc$dim
     
     return(dc)
   })
