@@ -333,9 +333,19 @@ as.DataCube.stars = function(from) {
   
   if (!all(sapply(from,function(obj)"stars"==class(obj)))) stop("Not all elements in from as a list are stars objects.")
   
+  # initialize all required fields
+  empty_object = list()
+  names(empty_object) = character()
+  
   result = list()
-  result$geometry_collection = list()
   result$type = "DataCollection"
+  result$metadata = list()
+  result$object_collections = empty_object
+  result$geometry_collection = list()
+  result$variables_collections = list()
+  result$timestamps = list(intervals = list())
+  
+  
   
   # meta data element
   md = list()
@@ -349,6 +359,7 @@ as.DataCube.stars = function(from) {
   md$number_of_variables = 0
   md$number_of_time_stamps = 0
   
+  # data_cubes in object_collections
   data_cubes = lapply(1:length(from), function(index) {
     obj = from[[index]]
     # create data cube descriptions
@@ -435,11 +446,8 @@ as.DataCube.stars = function(from) {
     
     return(dc)
   })
-  
-  result$object_collections = list()
   result$object_collections$data_cubes = data_cubes
   
-  result$variables_collections = list()
   # create variables
   vars = lapply(1:length(from), function(index) {
     obj = from[[index]]
@@ -452,7 +460,9 @@ as.DataCube.stars = function(from) {
         data = obj[[variable_name]]
         variable = list(
           name = variable_name,
-          values = as.vector(data)
+          values = as.vector(data),
+          unit="",
+          labels=list()
         )
         return(variable)
       })

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2]
+
+### Fixed
+- bad naming of variables_collections
+- set required fields in dimension model
+- several other alignments for required fields
+
 ## [0.3.1]
 
 ### Fixed
