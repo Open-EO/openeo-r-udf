@@ -4,11 +4,14 @@ library(lubridate)
 library(xts)
 
 api_version = "0.1.0"
-r_udf_version = "0.3.1"
+r_udf_version = "0.3.2"
 
-DEBUG = FALSE
-
-#TODO define float maximum digits
+DEBUG = Sys.getenv("DEBUG")
+if (length(trimws(DEBUG) == 0)) {
+  DEBUG = FALSE
+} else {
+  DEBUG = as.logical(DEBUG)
+}
 
 source("data_transformation.R")
 
@@ -58,7 +61,13 @@ check_data = function(req, res) {
     if (grepl(x = req$postBody,pattern = "structured_data_list")) {
       json_in = .measure_time(quote(jsonlite::fromJSON(req$postBody,simplifyVector=FALSE)),"Read json. Runtime:")
     } else {
-      json_in = .measure_time(quote(jsonlite::fromJSON(req$postBody)),"Read json. Runtime:")
+      json_in = .measure_time(quote(jsonlite::fromJSON(req$postBody,simplifyDataFrame = FALSE)),"Read json. Runtime:")
+      # due to the named dimension we need to transform the dimensions manually to data.frame
+      json_in$data$data_collection$object_collections$data_cubes = lapply(json_in$data$data_collection$object_collections$data_cubes, function(data_cube) {
+        data_cube$dimensions = as.data.frame(do.call(rbind, data_cube$dimensions))
+        
+        return(data_cube)
+      })
     }
     
     
@@ -212,7 +221,7 @@ post_udf_legacy.json = function(req,res, debug=FALSE) {
 #* Takes a UDFRequest containing data and code and runs the code on the data
 #*
 #* @post /udf
-post_udf.json = function(req,res, debug=FALSE) {
+post_udf.json = function(req,res, debug=DEBUG) {
   tryCatch({
     
     if (!is.null(debug) && isTRUE(debug)) {
@@ -244,7 +253,7 @@ post_udf.json = function(req,res, debug=FALSE) {
       # mainly for a multitude of structured data (e.g. multiple timeseries)
       results = list(.measure_time(quote(lapply(data_in, fun, context = req$user_context)),"Executed script. Runtime:"))
     }
-  
+    
     # map to stars or keep simple data types
     results = lapply(1:length(results), function(index) {
       if (any(class(results[[index]]) %in% "stars")) {
@@ -264,9 +273,13 @@ post_udf.json = function(req,res, debug=FALSE) {
       if (! all(sapply(results,function(res)"stars"==class(res)))) {
         stop("All data outputs have to be of class 'stars' or any structured data. Mixed types not supported, yet.")
       }
+      
+      empty_object = list()
+      names(empty_object) = character()
+      
       json_out = list(
-        user_context = if (length(req$user_context) == 0) NA else length(req$user_context),
-        server_context = if (length(req$server_context) == 0) NA else req$server_context,
+        user_context = if (length(req$user_context) == 0) empty_object else req$user_context,
+        server_context = if (length(req$server_context) == 0) empty_object else req$server_context,
         data_collection=.measure_time(quote(as(results,"DataCube")),"Translated from stars to DataCollection. Runtime:"))
         
     } else {
@@ -289,16 +302,25 @@ post_udf.json = function(req,res, debug=FALSE) {
                                                 null = "null",
                                                 digits = if (length(req$server_context$export_digits) == 0) 4 else req$server_context$export_digits)),
                          "Prepared JSON from list. Runtime:")
+    
+    res$setHeader(name = "Content-Type",value = "application/json")
+    res$setHeader(name = "date", value = Sys.time())
+    res$body = json
+    
+    return(res)
   }, error = function(e) {
-    json = jsonlite::toJSON(e,auto_unbox = T,force=T)
-    res$status = 500
+    res$status = 422
+    
+    res$setHeader(name = "Content-Type",value = "application/json")
+    res$setHeader(name = "date", value = Sys.time())
+    
+    print(e)
+    res$body = jsonlite::toJSON(e,auto_unbox = T,force=T)
+    
+    return(res)
   })
   
-  res$setHeader(name = "Content-Type",value = "application/json")
-  res$setHeader(name = "date", value = Sys.time())
-  res$body = json
-
-  return(res)
+  
 }
 
 #* @get /
@@ -410,7 +432,6 @@ get_installed_libraries = function() {
 }
 
 .translate_input_data = function(data,data_requirement=NULL) {
-  
   if ("DataCube" == class(data)) {
     data_in = .measure_time(quote(as(data,"stars")),"Translated list into stars. Runtime:")
   } else if ("StructuredData" %in% class(data)) {

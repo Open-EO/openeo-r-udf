@@ -1,10 +1,11 @@
 version: '3'
 services:
     r-udf-service:
-        image: openeor/r-udf-base:0.3.1
+        image: openeor/r-udf-base:0.3.2
         build: .
         container_name: r-udf-service
         environment:
             - PLUMBER_PORT=5555
+            - DEBUG=0
         ports:
             - "5555:5555"

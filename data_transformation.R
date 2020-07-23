@@ -100,7 +100,10 @@ setAs(from="HyperCube",to="stars",def=as.stars.HyperCube)
 
 # DataCube -> stars ----
 apply_dimensionality = function(dc,vc) {
-  stars_objs = apply(dc, MARGIN=1,function(dim_collection) {
+  # dimensions are named now and cause trouble when read from JSON, so build data frame manually
+  dc = as.data.frame(do.call(cbind,dc), stringsAsFactors = FALSE)
+  
+  stars_objs = apply(dc, MARGIN=2,function(dim_collection) {
     var_index = dim_collection$variable_collection+1
     
     # potentially multiple variables -> so apply dimnames to all of them and create a stars obj
@@ -186,12 +189,17 @@ apply_dimensionality = function(dc,vc) {
 
 extract_variables = function(variable_collection) {
   
-  collections = apply(variable_collection, MARGIN = 1, function(vc) {
-    var_names = unname(apply(vc$variables,MARGIN=1,function(var) {
+  variable_collection = as.data.frame(do.call(cbind,variable_collection), stringsAsFactors = FALSE)
+  
+  collections = apply(variable_collection, MARGIN = 2, function(vc) {
+    
+    vc$variables = as.data.frame(do.call(cbind,vc$variables), stringsAsFactors = FALSE)
+    
+    var_names = unname(apply(vc$variables,MARGIN=2,function(var) {
       var$name
     }))
     
-    vars = apply(vc$variables, MARGIN = 1, function(var,vc) {
+    vars = apply(vc$variables, MARGIN = 2, function(var,vc) {
       var = var$values
       if (length(vc$size) > 0 && !is.na(vc$size)) {
         dim(var) = vc$size
@@ -356,7 +364,7 @@ as.DataCube.stars = function(from) {
   #this will be adapted later
   md$number_of_object_collections = 0 
   md$number_of_geometries = 0
-  md$number_of_variables = 0
+  md$number_of_variable_collections = 0
   md$number_of_time_stamps = 0
   
   # data_cubes in object_collections
@@ -374,7 +382,7 @@ as.DataCube.stars = function(from) {
     dim_models = lapply(names(dims), function(key) {
       d = dims[[key]]
       
-      if ("POSIXct" %in% class(d$values)) {
+      if ("POSIXt" %in% class(d$values)) {
         d$values = format(d$values,format="%Y%m%dT%H%M%SZ")
       }
       
@@ -427,6 +435,13 @@ as.DataCube.stars = function(from) {
       }
       
       
+      if (any(sapply(ex, function(x) "POSIXt" %in% class(x)))) {
+        ex = sapply(ex, function(x) {
+          format(x,"%Y%m%dT%H%M%SZ")
+        })
+      }
+      
+      
       dim = list(
         description = "",
         extent=ex,
@@ -471,7 +486,10 @@ as.DataCube.stars = function(from) {
   })
   
   result$variables_collections = vars
-  result$metadata$number_of_variables = length(result$variable_collections)
+  
+  result$metadata = md
+  result$metadata$number_of_variable_collections = length(result$variables_collections)
+  
   
   return(result)
 }
